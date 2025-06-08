@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { View, Text, FlatList, StyleSheet, Pressable } from 'react-native'; // Import Pressable
 import { Link } from 'expo-router';
-import { mockTopApps, AppInfo } from '../../data/mockUsageData';
+import { mockTopApps, AppInfo } from '../../../data/mockUsageData';
 
 export default function AppLimitListScreen() {
     // In a real app, this state would come from a database or AsyncStorage
