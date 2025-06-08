@@ -1,8 +1,7 @@
-// app/(auth)/login.tsx
+// app/(auth)/login.tsx (Compat Version)
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../firebaseConfig'; // Adjust path if needed
+import { auth } from '../../firebaseConfig'; // We import the compat auth object
 import { Link } from 'expo-router';
 
 export default function LoginScreen() {
@@ -11,15 +10,10 @@ export default function LoginScreen() {
     const [loading, setLoading] = useState(false);
 
     const handleLogin = async () => {
-        if (!email || !password) {
-            Alert.alert("Error", "Please fill in all fields.");
-            return;
-        }
         setLoading(true);
         try {
-            await signInWithEmailAndPassword(auth, email, password);
-            // On successful login, Expo Router will automatically navigate
-            // to the main app layout because the user state has changed.
+            // Use the compat syntax: auth.signInWith...
+            await auth.signInWithEmailAndPassword(email, password);
         } catch (error: any) {
             Alert.alert("Login Failed", error.message);
         } finally {
@@ -30,31 +24,16 @@ export default function LoginScreen() {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Welcome Back!</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-            />
+            <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+            <TextInput style={styles.input} placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry />
             <Button title={loading ? "Logging in..." : "Login"} onPress={handleLogin} disabled={loading} />
             <View style={styles.linkContainer}>
-                <Link href="./signup">
-                    <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
-                </Link>
+                <Link href="/signup"><Text style={styles.linkText}>Don't have an account? Sign Up</Text></Link>
             </View>
         </View>
     );
 }
-// Add your styles
+// Styles
 const styles = StyleSheet.create({
     container: { flex: 1, justifyContent: 'center', padding: 20 },
     title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', marginBottom: 24 },

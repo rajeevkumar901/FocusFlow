@@ -1,8 +1,8 @@
 // app/reminders.tsx (Corrected)
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Platform, Alert } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { scheduleLocalNotification, registerForPushNotificationsAsync } from '../services/notificationService';
+import React, { useEffect, useState } from 'react';
+import { Alert, Button, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { registerForPushNotificationsAsync, scheduleLocalNotification } from '../../services/notificationService';
 
 export default function RemindersScreen() {
   const [date, setDate] = useState(new Date());

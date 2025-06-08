@@ -1,9 +1,9 @@
 // app/mindfulness.tsx
 import React from 'react';
-import { StyleSheet, View, ScrollView, Text } from 'react-native';
-import BreathingExercise from '../components/mindfulness/BreathingExercise';
-import CalmingSounds from '../components/mindfulness/CalmingSounds';
-import FocusQuote from '../components/mindfulness/FocusQuote';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import BreathingExercise from '../../components/mindfulness/BreathingExercise';
+import CalmingSounds from '../../components/mindfulness/CalmingSounds';
+import FocusQuote from '../../components/mindfulness/FocusQuote';
 
 export default function MindfulnessScreen() {
     return (

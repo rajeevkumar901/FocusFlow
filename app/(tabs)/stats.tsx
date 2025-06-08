@@ -1,9 +1,9 @@
 // app/stats.tsx
 import React from 'react';
-import { StyleSheet, Text, ScrollView, View } from 'react-native';
-import UsageChart from '../components/stats/UsageChart';
-import TopAppsList from '../components/stats/TopAppsList';
-import { mockDailyUsage, mockTopApps, mockScreenUnlocks } from '../data/mockUsageData';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import TopAppsList from '../../components/stats/TopAppsList';
+import UsageChart from '../../components/stats/UsageChart';
+import { mockDailyUsage, mockScreenUnlocks, mockTopApps } from '../../data/mockUsageData';
 
 export default function StatsScreen() {
     return (
