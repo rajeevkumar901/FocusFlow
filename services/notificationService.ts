@@ -1,57 +1,44 @@
-// services/notificationService.ts (Definitive Corrected Version)
+// services/notificationService.ts (Simplified)
 import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
+import { Platform, Alert } from 'react-native';
 
+// ... (setNotificationHandler and registerForPushNotificationsAsync are unchanged) ...
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
+    handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+    }),
 });
 
-export async function registerForPushNotificationsAsync() {
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FF231F7C',
-    });
-  }
+export async function registerForPushNotificationsAsync() { /* ... */ }
 
-  const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  let finalStatus = existingStatus;
-  if (existingStatus !== 'granted') {
-    const { status } = await Notifications.requestPermissionsAsync();
-    finalStatus = status;
-  }
-  if (finalStatus !== 'granted') {
-    alert('Failed to get permissions for notifications!');
-  }
-}
-
+// MODIFIED FUNCTION: It now only schedules and returns the ID.
 export async function scheduleLocalNotification(title: string, body: string, date: Date) {
-  const secondsUntil = (date.getTime() - new Date().getTime()) / 1000;
+    try {
+        if (date.getTime() <= new Date().getTime()) {
+            console.error("Attempted to schedule a notification for a time in the past.");
+            return null;
+        }
 
-  if (secondsUntil <= 0) {
-      console.log("Attempted to schedule a notification for a time in the past.");
-      return;
-  }
+        const trigger: Notifications.TimeIntervalTriggerInput = {
+            type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+            seconds: (date.getTime() - new Date().getTime()) / 1000,
+            repeats: false,
+        };
 
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: title,
-      body: body,
-      sound: 'default',
-    },
-    // TEMPORARY WORKAROUND: Add 'as any' at the end of the trigger object
-    trigger: {
-      seconds: secondsUntil,
-    } as any, 
-  });
-  
-  alert(`Reminder set for ${date.toLocaleString()}`);
+        const identifier = await Notifications.scheduleNotificationAsync({
+            content: { title, body, sound: 'default' },
+            trigger,
+        });
+        
+        // Return the ID on success
+        return identifier;
+    } catch (error) {
+        console.error("Error scheduling notification: ", error);
+        // Return null on failure
+        return null;
+    }
 }

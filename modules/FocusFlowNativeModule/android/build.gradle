@@ -1,0 +1,17 @@
+apply plugin: 'com.android.library'
+
+group = 'expo.modules.focusflownativemodule'
+version = '0.1.0'
+
+android {
+    compileSdkVersion 34
+    defaultConfig {
+        minSdkVersion 23
+    }
+    buildToolsVersion "34.0.0"
+}
+
+dependencies {
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.0'
+    implementation 'expo.modules.kotlin:expo-modules-kotlin:0.15.2'
+}

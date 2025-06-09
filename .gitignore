@@ -36,4 +36,8 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# Ignore native build folders
+/android
+/ios
+
 app-example
