@@ -1,4 +1,4 @@
-// data/mockUsageData.ts
+
 
 export const mockDailyUsage = {
     labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],

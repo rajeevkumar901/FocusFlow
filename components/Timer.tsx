@@ -1,6 +1,6 @@
 // components/Timer.tsx (Corrected)
 import React from 'react';
-import { Text, StyleSheet } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
 /**
  * This function takes a number of seconds and formats it into a MM:SS string.

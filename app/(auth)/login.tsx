@@ -1,4 +1,3 @@
-// app/(auth)/login.tsx (Compat Version)
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { auth } from '../../firebaseConfig'; // We import the compat auth object

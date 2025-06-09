@@ -1,4 +1,3 @@
-// hooks/useThemeColor.ts (Updated)
 import { Colors } from '@/constants/Colors';
 // 👇 Import our new useTheme hook instead of useColorScheme
 import { useTheme } from '@/context/ThemeContext';

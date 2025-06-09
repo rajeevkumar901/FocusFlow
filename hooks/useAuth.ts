@@ -1,4 +1,3 @@
-// hooks/useAuth.ts (Updated)
 import { useState, useEffect } from 'react';
 import { auth } from '../firebaseConfig';
 import firebase from 'firebase/compat/app'; // For the User type

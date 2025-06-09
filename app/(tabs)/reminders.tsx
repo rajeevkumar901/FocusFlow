@@ -1,4 +1,3 @@
-// app/(tabs)/reminders.tsx (Complete Code with Debugging)
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, Alert, Pressable, FlatList, Platform } from 'react-native';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';

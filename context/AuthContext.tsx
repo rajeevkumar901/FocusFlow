@@ -1,4 +1,3 @@
-// context/AuthContext.tsx
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { auth } from '../firebaseConfig';
 import firebase from 'firebase/compat/app';

@@ -1,4 +1,3 @@
-// app/(tabs)/mindfulness.tsx (Themed)
 import React from 'react';
 import { StyleSheet, ScrollView, View, Text } from 'react-native';
 import BreathingExercise from '../../components/mindfulness/BreathingExercise';

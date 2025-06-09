@@ -1,4 +1,3 @@
-// app/(tabs)/goals.tsx (Complete Code)
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, Button, Alert } from 'react-native';
 import GoalItem from '../../components/GoalItem';

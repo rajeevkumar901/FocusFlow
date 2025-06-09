@@ -1,4 +1,3 @@
-// app/(tabs)/index.tsx (Final Corrected Version)
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, Text, Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
