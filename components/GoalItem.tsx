@@ -1,4 +1,3 @@
-// components/GoalItem.tsx (Updated with Delete Button)
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,17 +7,19 @@ type GoalItemProps = {
   text: string;
   isAchieved: boolean;
   onToggle: () => void;
-  onDelete: () => void; // 👈 Add a new prop for the delete function
+  onDelete: () => void;
 };
 
 const GoalItem = ({ text, isAchieved, onToggle, onDelete }: GoalItemProps) => {
+    // This component now fetches its own theme colors.
     const cardColor = useThemeColor({}, 'card');
     const textColor = useThemeColor({}, 'text');
     const secondaryTextColor = useThemeColor({}, 'secondaryText');
     const tintColor = useThemeColor({}, 'tint');
+    const borderColor = useThemeColor({}, 'border');
 
     return (
-        <View style={[styles.container, { backgroundColor: cardColor }]}>
+        <View style={[styles.container, { backgroundColor: cardColor, borderBottomColor: borderColor }]}>
             <Pressable onPress={onToggle} style={styles.goalTextContainer}>
                 <Ionicons
                     name={isAchieved ? "checkmark-circle" : "ellipse-outline"}
@@ -30,7 +31,6 @@ const GoalItem = ({ text, isAchieved, onToggle, onDelete }: GoalItemProps) => {
                 </Text>
             </Pressable>
 
-            {/* 👇 This is the new Delete button */}
             <Pressable onPress={onDelete} style={styles.deleteButton}>
                 <Ionicons name="trash-outline" size={22} color="#ff3b30" />
             </Pressable>
@@ -40,18 +40,17 @@ const GoalItem = ({ text, isAchieved, onToggle, onDelete }: GoalItemProps) => {
 
 const styles = StyleSheet.create({
     container: {
-        padding: 18,
-        borderRadius: 10,
+        paddingVertical: 18,
+        paddingHorizontal: 16,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 12,
-        elevation: 2,
+        borderBottomWidth: 1, // We will now use a border instead of elevation
     },
     goalTextContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        flex: 1, // Allow this to take up most of the space
+        flex: 1,
     },
     goalText: {
         fontSize: 16,

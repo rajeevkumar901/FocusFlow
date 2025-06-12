@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
 import { ThemeProvider } from '../context/ThemeContext';
-import { AuthProvider, useAuth } from '../context/AuthContext'; // Import new Auth items
+import { AuthProvider, useAuth } from '../context/AuthContext';
 
 const InitialLayout = () => {
   const { user, isLoading } = useAuth();
@@ -10,7 +10,7 @@ const InitialLayout = () => {
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoading) return; // Wait until auth state is loaded
+    if (isLoading) return; 
 
     const inAuthGroup = segments[0] === '(auth)';
 
@@ -21,7 +21,7 @@ const InitialLayout = () => {
     }
   }, [user, isLoading, segments, router]);
 
-  // While loading auth state, show a spinner
+
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

@@ -1,12 +1,25 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import { auth } from '../../firebaseConfig'; // The import stays the same
+import { View, Text, TextInput, Button, StyleSheet, Alert, Pressable } from 'react-native';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../firebaseConfig';
 import { Link } from 'expo-router';
+import { useThemeColor } from '../../hooks/useThemeColor';
+import { StatusBar } from 'expo-status-bar';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function SignUpScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // --- Theming Hooks ---
+    const { theme } = useTheme();
+    const backgroundColor = useThemeColor({}, 'background');
+    const textColor = useThemeColor({}, 'text');
+    const cardColor = useThemeColor({}, 'card');
+    const borderColor = useThemeColor({}, 'border');
+    const accentColor = useThemeColor({}, 'tint');
+    const secondaryTextColor = useThemeColor({}, 'secondaryText');
 
     const handleSignUp = async () => {
         if (!email || !password) {
@@ -15,7 +28,6 @@ export default function SignUpScreen() {
         }
         setLoading(true);
         try {
-            // THE CHANGE IS HERE: We call the function on the auth object
             await auth.createUserWithEmailAndPassword(email, password);
         } catch (error: any) {
             Alert.alert("Sign Up Failed", error.message);
@@ -25,22 +37,47 @@ export default function SignUpScreen() {
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Create Account</Text>
-            <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} autoCapitalize="none" />
-            <TextInput style={styles.input} placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry />
-            <Button title={loading ? "Creating Account..." : "Sign Up"} onPress={handleSignUp} disabled={loading} />
+        <View style={[styles.container, { backgroundColor }]}>
+            <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+            
+            <Text style={[styles.title, { color: textColor }]}>Create Account</Text>
+            <TextInput
+                style={[styles.input, { backgroundColor: cardColor, color: textColor, borderColor }]}
+                placeholder="Email"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                placeholderTextColor={secondaryTextColor}
+            />
+            <TextInput
+                style={[styles.input, { backgroundColor: cardColor, color: textColor, borderColor }]}
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                placeholderTextColor={secondaryTextColor}
+            />
+            <View style={styles.buttonContainer}>
+              <Button title={loading ? "Creating Account..." : "Sign Up"} onPress={handleSignUp} disabled={loading} color={accentColor} />
+            </View>
             <View style={styles.linkContainer}>
-                <Link href="/login"><Text style={styles.linkText}>Already have an account? Login</Text></Link>
+                <Link href="/login" asChild>
+                    <Pressable>
+                      <Text style={[styles.linkText, { color: accentColor }]}>Already have an account? Login</Text>
+                    </Pressable>
+                </Link>
             </View>
         </View>
     );
 }
-// Styles remain the same
+
 const styles = StyleSheet.create({
     container: { flex: 1, justifyContent: 'center', padding: 20 },
     title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', marginBottom: 24 },
-    input: { height: 40, borderColor: 'gray', borderWidth: 1, marginBottom: 12, padding: 10, borderRadius: 5 },
-    linkContainer: { marginTop: 15, alignItems: 'center' },
-    linkText: { color: 'blue' }
+    input: { height: 50, borderWidth: 1, marginBottom: 12, padding: 15, borderRadius: 10, fontSize: 16 },
+    buttonContainer: {
+        marginTop: 10,
+    },
+    linkContainer: { marginTop: 20, alignItems: 'center' },
+    linkText: { fontSize: 16, fontWeight: '600' }
 });

@@ -1,33 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, Pressable, FlatList, Platform } from 'react-native';
-import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { View, Text, TextInput, StyleSheet, Platform, Alert, Pressable, FlatList } from 'react-native';
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { scheduleLocalNotification, registerForPushNotificationsAsync } from '../../services/notificationService';
 import { useThemeColor } from '../../hooks/useThemeColor';
+import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../firebaseConfig';
 import { collection, addDoc, onSnapshot, query, where, doc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import * as Notifications from 'expo-notifications';
 import { Ionicons } from '@expo/vector-icons';
 
-// Define the type for our Reminder object from Firestore
+// Define the type for our Reminder object
 interface Reminder {
-  id: string; // The Firestore document ID
+  id: string;
   text: string;
   reminderDate: Date;
   userId: string;
-  notificationId: string; // The OS notification ID
-  createdAt: any;
+  notificationId: string;
 }
 
 export default function RemindersScreen() {
     const { user } = useAuth();
+    const { theme } = useTheme();
     const [date, setDate] = useState(new Date());
     const [reminderText, setReminderText] = useState('');
     const [scheduledReminders, setScheduledReminders] = useState<Reminder[]>([]);
-    const [showPickerForIos, setShowPickerForIos] = useState(false);
+    const [isPickerVisible, setPickerVisibility] = useState(false);
 
-    // --- Theming and other hooks ---
+    // --- Theming Hooks ---
     const backgroundColor = useThemeColor({}, 'background');
     const textColor = useThemeColor({}, 'text');
     const cardColor = useThemeColor({}, 'card');
@@ -42,7 +42,6 @@ export default function RemindersScreen() {
             setScheduledReminders([]);
             return;
         }
-        // Listen for real-time updates to the reminders collection
         const remindersRef = collection(db, "reminders");
         const q = query(remindersRef, where("userId", "==", user.uid));
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -60,32 +59,29 @@ export default function RemindersScreen() {
         return () => unsubscribe();
     }, [user]);
 
+    const showPicker = () => setPickerVisibility(true);
+    const hidePicker = () => setPickerVisibility(false);
+
+    const handleConfirm = (selectedDate: Date) => {
+        setDate(selectedDate);
+        hidePicker();
+    };
+
     const handleScheduleReminder = async () => {
         if (!reminderText.trim() || !user) return;
         if (date <= new Date()) { Alert.alert('Invalid Time', 'Please select a future time for the reminder.'); return; }
         
         const notificationId = await scheduleLocalNotification('FocusFlow Reminder', reminderText, date);
 
-        // This is the debugging step
-        console.log('Received Notification ID from service:', notificationId);
-
         if (notificationId) {
-            try {
-                await addDoc(collection(db, "reminders"), {
-                    text: reminderText,
-                    reminderDate: date,
-                    userId: user.uid,
-                    notificationId: notificationId,
-                    createdAt: serverTimestamp(),
-                });
-                Alert.alert("Success", "Reminder has been set and saved!");
-                setReminderText('');
-            } catch (error) {
-                Alert.alert("Save Error", "The reminder was set on your phone, but could not be saved to your account.");
-                console.error("Error saving reminder to Firestore: ", error);
-            }
-        } else {
-            Alert.alert("Error", "Failed to schedule the reminder on your device.");
+            await addDoc(collection(db, "reminders"), {
+                text: reminderText,
+                reminderDate: date,
+                userId: user.uid,
+                notificationId: notificationId,
+                createdAt: serverTimestamp(),
+            });
+            setReminderText('');
         }
     };
 
@@ -103,45 +99,19 @@ export default function RemindersScreen() {
         ]);
     };
 
-    const showDateTimePicker = () => {
-        if (Platform.OS === 'android') {
-            DateTimePickerAndroid.open({
-                value: date,
-                mode: 'date',
-                minimumDate: new Date(),
-                onChange: (dateEvent, selectedDate) => {
-                    if (dateEvent.type === 'set' && selectedDate) {
-                        DateTimePickerAndroid.open({
-                            value: selectedDate,
-                            mode: 'time',
-                            onChange: (timeEvent, selectedTime) => {
-                                if (timeEvent.type === 'set' && selectedTime) {
-                                    const finalDate = new Date(selectedDate);
-                                    finalDate.setHours(selectedTime.getHours());
-                                    finalDate.setMinutes(selectedTime.getMinutes());
-                                    setDate(finalDate);
-                                }
-                            }
-                        });
-                    }
-                },
-            });
-        } else {
-            setShowPickerForIos(true);
-        }
-    };
-    
-    const onIosChange = (event: any, selectedDate?: Date) => {
-        setShowPickerForIos(false);
-        if (selectedDate) setDate(selectedDate);
-    };
-
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor }]}>
             <Text style={[styles.title, { color: textColor }]}>Set a New Reminder</Text>
+            
             <View style={[styles.inputContainer, {backgroundColor: cardColor}]}>
-                <TextInput style={[styles.input, {color: textColor, borderBottomColor: borderColor}]} placeholder="Reminder text..." value={reminderText} onChangeText={setReminderText} placeholderTextColor={secondaryTextColor}/>
-                <Pressable style={styles.dateButton} onPress={showDateTimePicker}>
+                <TextInput 
+                    style={[styles.input, {color: textColor, borderColor}]} 
+                    placeholder="Reminder text..." 
+                    value={reminderText} 
+                    onChangeText={setReminderText} 
+                    placeholderTextColor={secondaryTextColor}
+                />
+                <Pressable style={styles.dateButton} onPress={showPicker}>
                     <Ionicons name="calendar-outline" size={24} color={accentColor} />
                 </Pressable>
                 <Pressable style={[styles.setButton, {backgroundColor: accentColor}]} onPress={handleScheduleReminder}>
@@ -149,14 +119,22 @@ export default function RemindersScreen() {
                 </Pressable>
             </View>
 
-            {showPickerForIos && ( <DateTimePicker value={date} mode="datetime" display="spinner" onChange={onIosChange}/> )}
+            <DateTimePickerModal
+                isVisible={isPickerVisible}
+                mode="datetime"
+                onConfirm={handleConfirm}
+                onCancel={hidePicker}
+                date={date}
+                minimumDate={new Date()}
+                isDarkModeEnabled={theme === 'dark'}
+            />
 
             <Text style={[styles.listHeader, {color: textColor}]}>Upcoming Reminders</Text>
             <FlatList
                 data={scheduledReminders}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                    <View style={[styles.reminderItem, { backgroundColor: cardColor }]}>
+                    <View style={[styles.reminderItem, { backgroundColor: cardColor, borderColor: borderColor }]}>
                         <View style={{ flex: 1 }}>
                             <Text style={[styles.reminderText, { color: textColor }]}>{item.text}</Text>
                             <Text style={{ color: secondaryTextColor }}>{item.reminderDate.toLocaleString()}</Text>
@@ -181,7 +159,7 @@ const styles = StyleSheet.create({
     setButton: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
     buttonText: { fontWeight: 'bold' },
     listHeader: { fontSize: 18, fontWeight: 'bold', marginTop: 20, marginBottom: 10, },
-    reminderItem: { flexDirection: 'row', alignItems: 'center', padding: 15, borderRadius: 10, marginBottom: 10 },
+    reminderItem: { flexDirection: 'row', alignItems: 'center', padding: 15, borderRadius: 10, marginBottom: 10, borderWidth: 1 },
     reminderText: { fontSize: 16, },
     deleteButton: { padding: 5 },
 });
