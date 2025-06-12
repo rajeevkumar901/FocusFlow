@@ -10,18 +10,24 @@ const InitialLayout = () => {
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoading) return; 
+    // This logic is now UNCOMMENTED to restore the login flow.
+    if (isLoading) return; // Wait until auth state is loaded before navigating
 
     const inAuthGroup = segments[0] === '(auth)';
 
+    // If the user is not signed in and they are not on a login/signup screen,
+    // redirect them to the login page.
     if (!user && !inAuthGroup) {
       router.replace('/login');
-    } else if (user && inAuthGroup) {
+    } 
+    // If the user IS signed in and they are on a login/signup screen,
+    // redirect them to the main app.
+    else if (user && inAuthGroup) {
       router.replace('/');
     }
   }, [user, isLoading, segments, router]);
 
-
+  // While loading the user's status, show a spinner to prevent flickering.
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -30,6 +36,7 @@ const InitialLayout = () => {
     );
   }
 
+  // Once loaded, render the correct navigator stack.
   return (
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

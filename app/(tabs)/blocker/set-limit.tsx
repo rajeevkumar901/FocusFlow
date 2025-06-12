@@ -1,16 +1,18 @@
-// app/(tabs)/blocker/set-limit.tsx (Updated)
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Slider from '@react-native-community/slider';
 import { useThemeColor } from '../../../hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../../../context/AuthContext';
+import { db } from '../../../firebaseConfig';
+import { doc, setDoc } from 'firebase/firestore';
 
 export default function SetLimitScreen() {
     const router = useRouter();
-    // Get the app info passed from the previous screen
-    const { id, name, icon, limit } = useLocalSearchParams();
+    const { user } = useAuth();
+    // Get the app info passed from the previous screen, including the unique packageName
+    const { packageName, name, icon, limit } = useLocalSearchParams();
 
     const initialLimit = typeof limit === 'string' ? parseInt(limit, 10) : 0;
     const [currentLimit, setCurrentLimit] = useState(initialLimit);
@@ -24,19 +26,26 @@ export default function SetLimitScreen() {
     const borderColor = useThemeColor({}, 'border');
 
     const handleSave = async () => {
+        if (!user || !packageName) return;
+
         try {
-            const limitData = {
+            // Create a reference to a document in Firestore.
+            // We'll create a subcollection 'appLimits' for each user.
+            // The document ID will be the app's package name to prevent duplicates.
+            const limitRef = doc(db, "users", user.uid, "appLimits", packageName as string);
+
+            // Use setDoc to create or overwrite the limit data
+            await setDoc(limitRef, {
+                appName: name,
+                packageName: packageName,
                 limitInMinutes: currentLimit,
-                // We record the time when the limit was set to start our timer
-                timeSet: Date.now(), 
-            };
-            // Save the limit data to AsyncStorage, using the app's ID as the key
-            await AsyncStorage.setItem(`@app_limit_${id}`, JSON.stringify(limitData));
-            Alert.alert("Limit Set", `A timer has been started for ${name}.`);
+            });
+
+            Alert.alert("Limit Set", `The limit for ${name} has been saved.`);
             router.back();
         } catch (e) {
             Alert.alert("Error", "Could not save the limit.");
-            console.error("Error saving to AsyncStorage", e);
+            console.error("Error writing to Firestore", e);
         }
     };
 
@@ -57,8 +66,8 @@ export default function SetLimitScreen() {
                     <Slider
                         style={{ width: '100%', height: 40 }}
                         minimumValue={0}
-                        maximumValue={120} // 2 hours max
-                        step={1} // Allow setting 1-minute increments for testing
+                        maximumValue={180} // 3 hours max
+                        step={5}
                         value={currentLimit}
                         onValueChange={setCurrentLimit}
                         minimumTrackTintColor={accentColor}
@@ -67,7 +76,7 @@ export default function SetLimitScreen() {
                     />
                 </View>
                 <Pressable style={[styles.saveButton, { backgroundColor: accentColor }]} onPress={handleSave}>
-                    <Text style={[styles.saveButtonText, { color: buttonTextColor }]}>Set Limit & Start Timer</Text>
+                    <Text style={[styles.saveButtonText, { color: buttonTextColor }]}>Save Limit</Text>
                 </Pressable>
             </View>
         </View>

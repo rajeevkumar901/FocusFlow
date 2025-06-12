@@ -1,12 +1,25 @@
-// app/(tabs)/blocker/index.tsx (Final Conditional Render Fix)
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, Pressable, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
-import { useIsFocused } from '@react-navigation/native';
+import { View, Text, FlatList, StyleSheet, Pressable, SafeAreaView, ActivityIndicator } from 'react-native';
 import { Link } from 'expo-router';
-import { mockTopApps, AppInfo } from '../../../data/mockUsageData';
 import { useThemeColor } from '../../../hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../../../context/AuthContext';
+import { db } from '../../../firebaseConfig';
+import { collection, onSnapshot, query } from 'firebase/firestore';
+import { NativeModules } from 'react-native';
+
+const { UsageStatsModule } = NativeModules;
+
+// Type for the data we get from our native module
+interface InstalledApp {
+  name: string;
+  packageName: string;
+}
+
+// Type for the data we get from Firestore
+interface AppLimit {
+  limitInMinutes: number;
+}
 
 const getIconForApp = (appName: string): keyof typeof Ionicons.glyphMap => {
     const lowerCaseName = appName.toLowerCase();
@@ -18,119 +31,110 @@ const getIconForApp = (appName: string): keyof typeof Ionicons.glyphMap => {
     return 'apps-outline';
 };
 
-type AppLimitInfo = {
-    limitInMinutes: number;
-    timeSet: number;
-    isBlocked: boolean;
-};
-
 export default function AppLimitListScreen() {
-    const [appLimits, setAppLimits] = useState<Record<string, AppLimitInfo>>({});
-    const isFocused = useIsFocused();
+    const { user } = useAuth();
+    const [isLoading, setIsLoading] = useState(true);
+    const [installedApps, setInstalledApps] = useState<InstalledApp[]>([]);
+    const [appLimits, setAppLimits] = useState<Record<string, AppLimit>>({});
 
+    // --- Theming hooks ---
     const backgroundColor = useThemeColor({}, 'background');
     const textColor = useThemeColor({}, 'text');
     const cardColor = useThemeColor({}, 'card');
     const secondaryTextColor = useThemeColor({}, 'secondaryText');
     const accentColor = useThemeColor({}, 'tint');
 
+    // This effect loads the list of installed apps from the native module once
     useEffect(() => {
-        const loadLimits = async () => {
-            const keys = await AsyncStorage.getAllKeys();
-            const limitKeys = keys.filter(k => k.startsWith('@app_limit_'));
-            const limits: Record<string, AppLimitInfo> = {};
-            for (const key of limitKeys) {
-                const item = await AsyncStorage.getItem(key);
-                if (item) {
-                    const id = key.replace('@app_limit_', '');
-                    limits[id] = JSON.parse(item);
-                }
+        const loadInstalledApps = async () => {
+            setIsLoading(true);
+            try {
+                const apps: InstalledApp[] = await UsageStatsModule.getInstalledApps();
+                // Sort the apps alphabetically for a clean list
+                apps.sort((a, b) => a.name.localeCompare(b.name));
+                setInstalledApps(apps);
+            } catch (e) {
+                console.error("Failed to load installed apps", e);
+            } finally {
+                setIsLoading(false);
             }
-            setAppLimits(limits);
         };
-        if (isFocused) {
-            loadLimits();
-        }
-    }, [isFocused]);
+        loadInstalledApps();
+    }, []); // Empty dependency array ensures this runs only once.
 
+    // This effect listens for real-time updates to the limits saved in Firestore
     useEffect(() => {
-        const interval = setInterval(() => {
-            const newLimits = { ...appLimits };
-            let changed = false;
-            for (const id in newLimits) {
-                const app = newLimits[id];
-                if (app && !app.isBlocked && app.limitInMinutes > 0) {
-                    const timeElapsed = Date.now() - app.timeSet;
-                    const limitInMillis = app.limitInMinutes * 60 * 1000;
-                    if (timeElapsed > limitInMillis) {
-                        newLimits[id].isBlocked = true;
-                        changed = true;
-                    }
-                }
-            }
-            if (changed) {
-                setAppLimits(newLimits);
-            }
-        }, 5000);
-        return () => clearInterval(interval);
-    }, [appLimits]);
+        if (!user) return; // Don't listen if the user is not logged in
 
+        const limitsRef = collection(db, "users", user.uid, "appLimits");
+        const q = query(limitsRef);
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const limits: Record<string, AppLimit> = {};
+            snapshot.forEach(doc => {
+                // The document ID is the packageName
+                limits[doc.id] = doc.data() as AppLimit;
+            });
+            setAppLimits(limits);
+        });
 
-    // 👇 THIS IS THE REWRITTEN RENDER FUNCTION 👇
-    const renderItem = ({ item }: { item: AppInfo }) => {
-        const limitInfo = appLimits[item.id];
-        const isBlocked = limitInfo?.isBlocked ?? false;
-        const limitText = limitInfo ? `${limitInfo.limitInMinutes} min` : 'Not Set';
+        // Cleanup the listener when the component unmounts or the user changes
+        return () => unsubscribe();
+    }, [user]);
 
-        // First, we define the content of the row, which is the same in both cases
-        const itemContent = (
-            <View style={[styles.itemContainer, { backgroundColor: cardColor }, isBlocked && styles.blockedItem]}>
-                <Ionicons name={isBlocked ? 'lock-closed' : getIconForApp(item.name)} size={32} color={isBlocked ? secondaryTextColor : accentColor} style={styles.icon} />
-                <View style={styles.appInfo}>
-                    <Text style={[styles.appName, { color: isBlocked ? secondaryTextColor : textColor }]}>{item.name}</Text>
-                    <Text style={[styles.limitText, { color: secondaryTextColor }]}>{limitText}</Text>
-                </View>
-                {!isBlocked && <Ionicons name="chevron-forward-outline" size={22} color={secondaryTextColor} />}
-            </View>
-        );
-
-        if (isBlocked) {
-            // If the app is blocked, we return a simple Pressable that shows an alert
-            return (
-                <Pressable onPress={() => Alert.alert("App Blocked", `${item.name} is blocked for today.`)}>
-                    {itemContent}
-                </Pressable>
-            );
-        } else {
-            // If it's NOT blocked, we return the Link component that allows navigation
-            return (
-                <Link href={{ pathname: "/blocker/set-limit", params: { id: item.id, name: item.name, icon: getIconForApp(item.name), limit: limitInfo?.limitInMinutes || 0 } }} asChild>
-                    <Pressable>
-                        {itemContent}
-                    </Pressable>
-                </Link>
-            );
+    // THIS IS THE NEW EFFECT: It sends the updated limits to the native service
+    useEffect(() => {
+        if (Object.keys(appLimits).length > 0) {
+            console.log("Updating native module with new limits:", appLimits);
+            UsageStatsModule.updateBlockedAppsList(appLimits);
         }
+    }, [appLimits]); // This runs every time the appLimits state is updated
+
+
+    const renderItem = ({ item }: { item: InstalledApp }) => {
+        const limitInfo = appLimits[item.packageName];
+        const limitText = limitInfo ? `${Math.floor(limitInfo.limitInMinutes / 60)}h ${limitInfo.limitInMinutes % 60}m / day` : 'No limit set';
+
+        return (
+            <Link href={{ pathname: "/blocker/set-limit", params: { packageName: item.packageName, name: item.name, icon: getIconForApp(item.name), limit: limitInfo?.limitInMinutes || 0 } }} asChild>
+                <Pressable style={({ pressed }) => [styles.itemContainer, { backgroundColor: cardColor, opacity: pressed ? 0.8 : 1 }]}>
+                    <Ionicons name={getIconForApp(item.name)} size={32} color={accentColor} style={styles.icon} />
+                    <View style={styles.appInfo}>
+                        <Text style={[styles.appName, { color: textColor }]}>{item.name}</Text>
+                        <Text style={[styles.limitText, { color: secondaryTextColor }]}>{limitText}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward-outline" size={22} color={secondaryTextColor} />
+                </Pressable>
+            </Link>
+        );
     };
+
+    if (isLoading) {
+        return <View style={[styles.container, {justifyContent: 'center', backgroundColor}]}><ActivityIndicator size="large" color={accentColor}/></View>
+    }
 
     return (
         <SafeAreaView style={[styles.safeArea, { backgroundColor }]}>
             <View style={styles.header}>
                 <Text style={[styles.title, { color: textColor }]}>App Time Limits</Text>
-                <Text style={[styles.description, { color: secondaryTextColor }]}>Set a temporary timer for an app. The app will be blocked in this list when the timer runs out.</Text>
+                <Text style={[styles.description, { color: secondaryTextColor }]}>Select an app to set or modify its daily usage limit.</Text>
             </View>
-            <FlatList data={mockTopApps} renderItem={renderItem} keyExtractor={(item) => item.id} contentContainerStyle={{ paddingHorizontal: 16 }}/>
+            <FlatList
+                data={installedApps}
+                renderItem={renderItem}
+                keyExtractor={(item) => item.packageName}
+                contentContainerStyle={{ paddingHorizontal: 16 }}
+            />
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
+    container: { flex: 1 },
     safeArea: { flex: 1 },
-    header: { paddingTop: 10, paddingBottom: 20, paddingHorizontal: 16, },
+    header: { paddingTop: 10, paddingBottom: 20, paddingHorizontal: 16 },
     title: { fontSize: 28, fontWeight: 'bold' },
-    description: { fontSize: 16, marginTop: 4, },
-    itemContainer: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 12, marginBottom: 12, elevation: 2, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, },
-    blockedItem: { opacity: 0.6 },
+    description: { fontSize: 16, marginTop: 4 },
+    itemContainer: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 12, marginBottom: 12 },
     icon: { marginRight: 16 },
     appInfo: { flex: 1 },
     appName: { fontSize: 17, fontWeight: '600' },
