@@ -11,13 +11,12 @@ import { doc, setDoc } from 'firebase/firestore';
 export default function SetLimitScreen() {
     const router = useRouter();
     const { user } = useAuth();
-    // Get the app info passed from the previous screen, including the unique packageName
+    // 👇 The 'icon' param is now a valid Ionicons name (string)
     const { packageName, name, icon, limit } = useLocalSearchParams();
 
     const initialLimit = typeof limit === 'string' ? parseInt(limit, 10) : 0;
     const [currentLimit, setCurrentLimit] = useState(initialLimit);
 
-    // --- Theming hooks ---
     const backgroundColor = useThemeColor({}, 'background');
     const textColor = useThemeColor({}, 'text');
     const cardColor = useThemeColor({}, 'card');
@@ -27,20 +26,13 @@ export default function SetLimitScreen() {
 
     const handleSave = async () => {
         if (!user || !packageName) return;
-
         try {
-            // Create a reference to a document in Firestore.
-            // We'll create a subcollection 'appLimits' for each user.
-            // The document ID will be the app's package name to prevent duplicates.
             const limitRef = doc(db, "users", user.uid, "appLimits", packageName as string);
-
-            // Use setDoc to create or overwrite the limit data
             await setDoc(limitRef, {
                 appName: name,
                 packageName: packageName,
                 limitInMinutes: currentLimit,
             });
-
             Alert.alert("Limit Set", `The limit for ${name} has been saved.`);
             router.back();
         } catch (e) {
@@ -59,6 +51,7 @@ export default function SetLimitScreen() {
     return (
         <View style={[styles.container, { backgroundColor }]}>
             <View style={[styles.card, { backgroundColor: cardColor }]}>
+                {/* 👇 This now works correctly because 'icon' is a valid name */}
                 <Ionicons name={icon as any} size={64} color={accentColor} />
                 <Text style={[styles.header, { color: textColor }]}>Set limit for {name}</Text>
                 <View style={styles.sliderContainer}>
@@ -66,7 +59,7 @@ export default function SetLimitScreen() {
                     <Slider
                         style={{ width: '100%', height: 40 }}
                         minimumValue={0}
-                        maximumValue={180} // 3 hours max
+                        maximumValue={180}
                         step={5}
                         value={currentLimit}
                         onValueChange={setCurrentLimit}
