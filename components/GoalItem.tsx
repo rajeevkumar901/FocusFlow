@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useThemeColor } from '../hooks/useThemeColor';
 
 type GoalItemProps = {
@@ -11,7 +11,6 @@ type GoalItemProps = {
 };
 
 const GoalItem = ({ text, isAchieved, onToggle, onDelete }: GoalItemProps) => {
-    // This component now fetches its own theme colors.
     const cardColor = useThemeColor({}, 'card');
     const textColor = useThemeColor({}, 'text');
     const secondaryTextColor = useThemeColor({}, 'secondaryText');
@@ -45,7 +44,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        borderBottomWidth: 1, // We will now use a border instead of elevation
+        borderBottomWidth: StyleSheet.hairlineWidth,
     },
     goalTextContainer: {
         flexDirection: 'row',

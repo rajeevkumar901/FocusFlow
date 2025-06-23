@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TextInput, Alert, Pressable } from 'react-native';
 import GoalItem from '../../components/GoalItem';
 import { useThemeColor } from '../../hooks/useThemeColor';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../firebaseConfig';
 import { collection, addDoc, onSnapshot, query, where, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
+// Define the type for our Goal object from Firestore
 interface Goal {
   id: string;
   text: string;
@@ -29,7 +30,7 @@ export default function GoalsScreen() {
     const borderColor = useThemeColor({}, 'border');
     const secondaryTextColor = useThemeColor({}, 'secondaryText');
 
-    // --- Data Fetching and Logic (no changes here) ---
+    // Effect to listen for real-time updates to goals (This is correct)
     useEffect(() => {
         if (!user) { setGoals([]); return; }
         const goalsRef = collection(db, "goals");
@@ -44,9 +45,57 @@ export default function GoalsScreen() {
         return () => unsubscribe();
     }, [user]);
 
-    const handleAddGoal = async () => { /* ... same logic ... */ };
-    const toggleGoal = async (goal: Goal) => { /* ... same logic ... */ };
-    const handleDeleteGoal = (goalId: string) => { /* ... same logic ... */ };
+    // 👇 FIX #1: The handleAddGoal function with correct error handling
+    const handleAddGoal = async () => {
+        if (!newGoalText.trim() || !user) {
+            Alert.alert("Input empty", "Please enter a goal before adding.");
+            return;
+        }
+        try {
+            await addDoc(collection(db, "goals"), {
+                text: newGoalText,
+                achieved: false,
+                userId: user.uid,
+                createdAt: serverTimestamp(),
+            });
+            setNewGoalText(''); // Clear the input field on success
+        } catch (e) {
+            console.error("Error adding document: ", e);
+            Alert.alert("Error", "Could not save your goal. Please try again.");
+        }
+    };
+
+    // This function is for toggling the completed status
+    const toggleGoal = async (goal: Goal) => {
+        const goalRef = doc(db, "goals", goal.id);
+        await updateDoc(goalRef, {
+            achieved: !goal.achieved
+        });
+    };
+
+    // 👇 FIX #2: The handleDeleteGoal function with correct confirmation logic
+    const handleDeleteGoal = (goalId: string) => {
+        Alert.alert(
+            "Delete Goal",
+            "Are you sure you want to permanently delete this goal?",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete",
+                    onPress: async () => {
+                        try {
+                            const goalRef = doc(db, "goals", goalId);
+                            await deleteDoc(goalRef);
+                        } catch (e) {
+                            console.error("Error deleting document: ", e);
+                            Alert.alert("Error", "Could not delete the goal.");
+                        }
+                    },
+                    style: "destructive",
+                },
+            ]
+        );
+    };
 
     return (
         <View style={[styles.container, { backgroundColor }]}>
@@ -79,7 +128,7 @@ export default function GoalsScreen() {
                     />
                 )}
                 keyExtractor={(item) => item.id}
-                contentContainerStyle={{ marginHorizontal: 16, backgroundColor: cardColor, borderRadius: 10 }}
+                contentContainerStyle={[styles.listContainer, { backgroundColor: cardColor, borderColor }]}
                 ListEmptyComponent={<Text style={{textAlign: 'center', padding: 20, color: secondaryTextColor}}>No goals yet. Add one!</Text>}
             />
         </View>
@@ -109,4 +158,10 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 8,
     },
+    listContainer: {
+        marginHorizontal: 16,
+        borderRadius: 10,
+        borderWidth: 1,
+        overflow: 'hidden' // This keeps the list items inside the rounded corners
+    }
 });

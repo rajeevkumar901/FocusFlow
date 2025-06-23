@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, Pressable } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert, Pressable, ActivityIndicator } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
 import { Link } from 'expo-router';
@@ -19,6 +19,7 @@ export default function SignUpScreen() {
     const cardColor = useThemeColor({}, 'card');
     const borderColor = useThemeColor({}, 'border');
     const accentColor = useThemeColor({}, 'tint');
+    const buttonTextColor = useThemeColor({}, 'headerText');
     const secondaryTextColor = useThemeColor({}, 'secondaryText');
 
     const handleSignUp = async () => {
@@ -57,9 +58,16 @@ export default function SignUpScreen() {
                 secureTextEntry
                 placeholderTextColor={secondaryTextColor}
             />
-            <View style={styles.buttonContainer}>
-              <Button title={loading ? "Creating Account..." : "Sign Up"} onPress={handleSignUp} disabled={loading} color={accentColor} />
-            </View>
+            
+            {/* 👇 FIX: Replaced the <Button> with a styled <Pressable> 👇 */}
+            <Pressable style={[styles.button, { backgroundColor: loading ? secondaryTextColor : accentColor }]} onPress={handleSignUp} disabled={loading}>
+                {loading ? (
+                    <ActivityIndicator color={backgroundColor} />
+                ) : (
+                    <Text style={[styles.buttonText, { color: buttonTextColor }]}>Sign Up</Text>
+                )}
+            </Pressable>
+
             <View style={styles.linkContainer}>
                 <Link href="/login" asChild>
                     <Pressable>
@@ -75,8 +83,16 @@ const styles = StyleSheet.create({
     container: { flex: 1, justifyContent: 'center', padding: 20 },
     title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', marginBottom: 24 },
     input: { height: 50, borderWidth: 1, marginBottom: 12, padding: 15, borderRadius: 10, fontSize: 16 },
-    buttonContainer: {
+    button: {
+        height: 50,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
         marginTop: 10,
+    },
+    buttonText: {
+        fontSize: 18,
+        fontWeight: 'bold',
     },
     linkContainer: { marginTop: 20, alignItems: 'center' },
     linkText: { fontSize: 16, fontWeight: '600' }

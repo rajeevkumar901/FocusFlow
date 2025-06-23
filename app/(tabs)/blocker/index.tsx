@@ -1,19 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, Pressable, SafeAreaView, ActivityIndicator, Alert, Image } from 'react-native';
-import { useIsFocused } from '@react-navigation/native';
-import { Link } from 'expo-router';
-import { useThemeColor } from '../../../hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../../context/AuthContext';
-import { db } from '../../../firebaseConfig';
-import { collection, onSnapshot, query } from 'firebase/firestore';
-import { NativeModules } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Link } from 'expo-router';
+import { collection, onSnapshot, query } from 'firebase/firestore';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, Image, NativeModules, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { useAuth } from '../../../context/AuthContext';
 import { useTheme } from '../../../context/ThemeContext';
+import { db } from '../../../firebaseConfig';
+import { useThemeColor } from '../../../hooks/useThemeColor';
 
 const { UsageStatsModule } = NativeModules;
 
-// Type for the data we get from our native module
+// Type for the app data we get from our native module
 interface InstalledApp {
   name: string;
   packageName: string;
@@ -97,11 +96,19 @@ export default function AppLimitListScreen() {
                         <Text style={[styles.appName, { color: textColor }]}>{item.name}</Text>
                         <Text style={[styles.limitText, { color: secondaryTextColor }]}>{limitText}</Text>
                     </View>
-                    <Ionicons name="chevron-forward-outline" size={22} color={secondaryTextColor} />
+                    {/* The chevron forward icon has been removed from here */}
                 </Pressable>
             </Link>
         );
     }, [appLimits, textColor, secondaryTextColor, accentColor, borderColor]);
+
+    // This is a new component for our scrolling header
+    const ListHeader = () => (
+        <View style={styles.header}>
+            <Text style={[styles.title, { color: textColor }]}>App Time Limits</Text>
+            <Text style={[styles.description, { color: secondaryTextColor }]}>Select an app to set or modify its daily usage limit.</Text>
+        </View>
+    );
 
     const ItemSeparator = () => <View style={[styles.separator, { backgroundColor: borderColor }]} />;
 
@@ -111,20 +118,16 @@ export default function AppLimitListScreen() {
 
     return (
         <SafeAreaView style={[styles.safeArea, { backgroundColor }]}>
-            {/* The conditional logic is now moved "inline" into the colors prop */}
-            <LinearGradient 
-                colors={theme === 'light' ? ['#f2f2f7', '#ffffff'] : ['#000000', '#1c1c1e']} 
+            <LinearGradient
+                colors={theme === 'light' ? ['#f2f2f7', '#ffffff'] : ['#000000', '#1c1c1e']}
                 style={styles.gradient}
             >
-                <View style={styles.header}>
-                    <Text style={[styles.title, { color: textColor }]}>App Time Limits</Text>
-                    <Text style={[styles.description, { color: secondaryTextColor }]}>Select an app to set or modify its daily usage limit.</Text>
-                </View>
                 <FlatList
                     data={installedApps}
                     renderItem={renderItem}
                     keyExtractor={(item) => item.packageName}
                     ItemSeparatorComponent={ItemSeparator}
+                    ListHeaderComponent={ListHeader}
                     ListEmptyComponent={<Text style={{ textAlign: 'center', color: secondaryTextColor }}>Could not load apps.</Text>}
                 />
             </LinearGradient>
@@ -165,13 +168,16 @@ const styles = StyleSheet.create({
     separator: {
         height: StyleSheet.hairlineWidth,
         width: '100%',
-        marginLeft: 72,
+        marginLeft: 0,
+        marginTop:10,
     },
     icon: {
-        width: 40,
-        height: 40,
+        width: 50,
+        height: 50,
         marginRight: 16,
-        borderRadius: 8,
+        marginLeft:16,
+        marginTop:10,
+        borderRadius: 8
     },
     iconFallback: {
         justifyContent: 'center',
@@ -179,6 +185,7 @@ const styles = StyleSheet.create({
     },
     appInfo: {
         flex: 1,
+        marginLeft:16,
     },
     appName: {
         fontSize: 17,
