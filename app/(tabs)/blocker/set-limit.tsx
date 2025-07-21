@@ -11,7 +11,7 @@ import { doc, setDoc } from "firebase/firestore";
 export default function SetLimitScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  // 👇 The 'icon' param is now a valid Ionicons name (string)
+  // The 'icon' param is now a valid Ionicons name (string)
   const { packageName, name, icon, limit } = useLocalSearchParams();
 
   const initialLimit = typeof limit === "string" ? parseInt(limit, 10) : 0;
