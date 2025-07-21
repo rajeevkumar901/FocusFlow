@@ -24,7 +24,7 @@ FocusFlow is an all-in-one Android application designed to help users monitor, c
 - **Holistic Approach:** Balances motivational tools and positive reinforcement with effective restriction.
 - **Personalization:** All settings, goals, and limits are cloud-synced and persist across devices.
 - **Native Performance:** Built with React Native (Expo) and custom Kotlin modules for accurate tracking and high responsiveness.
-- **User-Centric Design:** Clean, intuitive UI adaptable for all users and supported in both light and dark modes[1].
+- **User-Centric Design:** Clean, intuitive UI adaptable for all users and supported in both light and dark modes.
 
 ## Modules & Architecture
 
