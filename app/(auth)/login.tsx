@@ -60,7 +60,7 @@ export default function LoginScreen() {
                 placeholderTextColor={secondaryTextColor}
             />
             
-            {/* 👇 FIX: Replaced the <Button> with a styled <Pressable> 👇 */}
+            
             <Pressable style={[styles.button, { backgroundColor: loading ? secondaryTextColor : accentColor }]} onPress={handleLogin} disabled={loading}>
                 {loading ? (
                     <ActivityIndicator color={backgroundColor} />

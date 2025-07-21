@@ -59,7 +59,7 @@ export default function SignUpScreen() {
                 placeholderTextColor={secondaryTextColor}
             />
             
-            {/* 👇 FIX: Replaced the <Button> with a styled <Pressable> 👇 */}
+
             <Pressable style={[styles.button, { backgroundColor: loading ? secondaryTextColor : accentColor }]} onPress={handleSignUp} disabled={loading}>
                 {loading ? (
                     <ActivityIndicator color={backgroundColor} />

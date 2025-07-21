@@ -57,7 +57,6 @@ export default function SetLimitScreen() {
   return (
     <View style={[styles.container, { backgroundColor }]}>
       <View style={[styles.card, { backgroundColor: cardColor }]}>
-        {/* 👇 This now works correctly because 'icon' is a valid name */}
         <Ionicons name={icon as any} size={64} color={accentColor} />
         <Text style={[styles.header, { color: textColor }]}>
           Set limit for {name}

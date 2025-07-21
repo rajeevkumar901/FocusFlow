@@ -1,4 +1,3 @@
-// app/(tabs)/blocker/_layout.tsx (Corrected)
 import { Ionicons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
 import React from 'react';
@@ -11,7 +10,7 @@ export default function BlockerLayout() {
   const headerTintColor = useThemeColor({}, 'text');
 
   return (
-    // 👇 THIS IS THE FIX: We explicitly set the starting screen for this stack.
+
     <Stack initialRouteName="index">
       <Stack.Screen
         name="index"
