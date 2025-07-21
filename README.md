@@ -4,7 +4,7 @@
 
 ## Overview
 
-FocusFlow is an all-in-one Android application designed to help users monitor, control, and improve their mobile usage habits. By combining real-time app usage tracking, focus session management, app blocking, cloud-synced goal tracking, and mindful productivity tools in a single native solution, FocusFlow supports healthier digital habits and a more balanced relationship with technology[1].
+FocusFlow is an all-in-one Android application designed to help users monitor, control, and improve their mobile usage habits. By combining real-time app usage tracking, focus session management, app blocking, cloud-synced goal tracking, and mindful productivity tools in a single native solution, FocusFlow supports healthier digital habits and a more balanced relationship with technology.
 
 ## Features
 
@@ -104,4 +104,4 @@ This project is intended for educational and personal productivity use. See LICE
 For questions or collaboration, contact the original developer:  
 **Rajeev Kumar** | Dept. of Computer Science Engineering, GJUST, Hisar
 
-**Empower your digital wellness journey with FocusFlow!**[1]
+**Empower your digital wellness journey with FocusFlow!**
